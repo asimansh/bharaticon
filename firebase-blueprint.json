@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "Personality": {
+      "title": "Personality",
+      "description": "A famous Indian personality icon.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["Teacher", "Leader", "Social Worker"] },
+        "image": { "type": "string", "format": "uri" },
+        "short_bio": { "type": "string" },
+        "full_bio": { "type": "string" },
+        "born": { "type": "string" },
+        "impact": { "type": "string" },
+        "current_status": { "type": "string" },
+        "state": { "type": "string" },
+        "votes": { "type": "integer" }
+      },
+      "required": ["name", "category", "image", "short_bio", "full_bio", "born", "impact", "current_status", "state", "votes"]
+    },
+    "Vote": {
+      "title": "Vote",
+      "description": "A vote cast by a user for a personality.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "personalityId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "personalityId", "timestamp"]
+    },
+    "Tribute": {
+      "title": "Tribute",
+      "description": "A short tribute message left by a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userImage": { "type": "string" },
+        "personalityId": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "personalityId", "message", "createdAt"]
+    },
+    "UserStats": {
+      "title": "UserStats",
+      "description": "Statistics and achievements for a user.",
+      "type": "object",
+      "properties": {
+        "votesCount": { "type": "integer" },
+        "badges": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["votesCount", "badges"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Extended user profile information.",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "dob": { "type": "string" },
+        "mobile": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["firstName", "lastName", "email"]
+    }
+  },
+  "firestore": {
+    "/personalities/{personalityId}": {
+      "schema": "Personality",
+      "description": "Collection of iconic personalities."
+    },
+    "/votes/{voteId}": {
+      "schema": "Vote",
+      "description": "Collection of votes to track unique voter/personality pairs."
+    },
+    "/tributes/{tributeId}": {
+      "schema": "Tribute",
+      "description": "Collection of tributes from users."
+    },
+    "/users_stats/{userId}": {
+      "schema": "UserStats",
+      "description": "User activity and badges tracking."
+    },
+    "/users_profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Store extra user details like DOB and mobile."
+    }
+  }
+}
