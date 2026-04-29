@@ -19,17 +19,16 @@ service cloud.firestore {
     match /personalities/{personalityId} {
       allow get, list: if true;
       
-      // Allow vote increment:
-      // 1. Must be signed in
-      // 2. Only the 'votes' field changes by exactly +1
-      // 3. A corresponding vote document must be created in the same batch
+      // Allow admin full access
+      allow create, update, delete: if isSignedIn() && 
+        request.auth.token.email == 'asimbyans@gmail.com' &&
+        request.auth.token.email_verified == true;
+      
+      // Allow vote increment for common users
       allow update: if isSignedIn() && 
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])) &&
         (request.resource.data.votes == resource.data.votes + 1) &&
         existsAfter(/databases/$(database)/documents/votes/$(request.auth.uid + "_" + personalityId));
-        
-      // Allow admin creation
-      allow create: if isSignedIn() && request.auth.token.email == 'asimbyans@gmail.com';
     }
 
     // Tributes collection
