@@ -54,6 +54,7 @@ export default function AdminApp() {
   const [personalities, setPersonalities] = useState<Personality[]>([]);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [formData, setFormData] = useState<Personality>({
     name: '',
@@ -219,6 +220,11 @@ export default function AdminApp() {
       return;
     }
 
+    if (!formData.image) {
+      alert("Please provide an image URL or upload a photo.");
+      return;
+    }
+
     try {
       const newDocRef = doc(collection(db, 'personalities'));
       await setDoc(newDocRef, {
@@ -244,6 +250,20 @@ export default function AdminApp() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       handleFirestoreError(error, 'create', 'personalities');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData(prev => ({ ...prev, image: base64String }));
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -450,15 +470,51 @@ export default function AdminApp() {
 
                       <div className="space-y-10">
                         <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Official Portrait URL</label>
-                          <input 
-                            required
-                            type="url" 
-                            value={formData.image}
-                            onChange={(e) => setFormData({...formData, image: e.target.value})}
-                            placeholder="https://cloud-storage.com/portrait.png"
-                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold transition-all shadow-inner"
-                          />
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Official Portrait (URL or Upload)</label>
+                          <div className="flex gap-4">
+                            <input 
+                              required
+                              type="url" 
+                              value={formData.image.startsWith('data:') ? 'Image uploaded' : formData.image}
+                              onChange={(e) => setFormData({...formData, image: e.target.value})}
+                              placeholder="https://cloud-storage.com/portrait.png"
+                              className="flex-1 bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-inner"
+                              disabled={formData.image.startsWith('data:')}
+                            />
+                            <div className="relative">
+                              <input 
+                                type="file" 
+                                id="admin-image-upload"
+                                className="hidden" 
+                                accept="image/*" 
+                                onChange={handleImageUpload} 
+                              />
+                              <label 
+                                htmlFor="admin-image-upload"
+                                className="h-full px-6 bg-white border border-gray-100 rounded-2xl flex items-center justify-center cursor-pointer hover:border-gold transition-colors text-[10px] font-bold uppercase tracking-widest text-gray-400 group"
+                              >
+                                {isUploading ? (
+                                  <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <span className="group-hover:text-gold transition-colors">Upload</span>
+                                )}
+                              </label>
+                            </div>
+                            {formData.image.startsWith('data:') && (
+                              <button 
+                                type="button"
+                                onClick={() => setFormData({...formData, image: ''})}
+                                className="px-4 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                          {formData.image.startsWith('data:') && (
+                            <div className="mt-2 w-20 h-20 rounded-xl overflow-hidden border border-gold/20 shadow-lg">
+                              <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                            </div>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
