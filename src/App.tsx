@@ -20,7 +20,8 @@ import {
   Instagram,
   Heart,
   ExternalLink,
-  Plus
+  Plus,
+  LayoutDashboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, handleFirestoreError } from './lib/firebase';
@@ -91,80 +92,7 @@ interface Personality {
 }
 
 // --- Initial Data ---
-const INITIAL_DATA: Omit<Personality, 'id'>[] = [
-  {
-    name: "Vikas Divyakirti",
-    category: "Teacher",
-    image: "https://images.unsplash.com/photo-1544717297-fa154da09f9b?auto=format&fit=crop&w=400&q=80",
-    votes: 1250,
-    short_bio: "Founder of Drishti IAS, renowned for his teaching style and insights.",
-    full_bio: "Dr. Vikas Divyakirti is a former civil servant and a legendary teacher in India. He is known for making complex topics simple for UPSC aspirants. His deep understanding of humanities, philosophy, and history has made him an icon among students. He founded Drishti IAS in 1999 with a vision to provide quality guidance to aspirants from various backgrounds.",
-    born: "Haryana, India",
-    impact: "Guided thousands of students to clear the civil services exam.",
-    current_status: "Active Educator and Speaker",
-    state: "Haryana"
-  },
-  {
-    name: "Ratan Tata",
-    category: "Leader",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
-    votes: 5000,
-    short_bio: "Industrialist and Philanthropist, former chairman of Tata Group.",
-    full_bio: "Ratan Tata is a visionary leader who transformed the Tata Group into a global powerhouse while maintaining high ethical standards. Under his leadership, Tata Motors acquired Jaguar Land Rover and Corus, among other major global acquisitions. He is equally famous for his humility and extensive philanthropic work through the Tata Trusts.",
-    born: "Mumbai, India",
-    impact: "Donated billions through Tata Trusts for social welfare and education.",
-    current_status: "Philanthropist & Chairman Emeritus",
-    state: "Maharashtra"
-  },
-  {
-    name: "Medha Patkar",
-    category: "Social Worker",
-    image: "https://images.unsplash.com/photo-1489424155312-428b5783ee4a?auto=format&fit=crop&w=400&q=80",
-    votes: 850,
-    short_bio: "Famous social activist known for Narmada Bachao Andolan.",
-    full_bio: "Medha Patkar has dedicated her life to social causes, specifically fighting for the rights of tribal people and farmers displaced by large dam projects. She is a core member of the Narmada Bachao Andolan and the National Alliance of People's Movements. Her persistence in non-violent protests has gained global recognition.",
-    born: "Mumbai, India",
-    impact: "Environmental protection and tribal rights advocacy across India.",
-    current_status: "Activist",
-    state: "Maharashtra"
-  },
-  {
-    name: "Dr. A.P.J. Abdul Kalam",
-    category: "Leader",
-    image: "https://images.unsplash.com/photo-1549419133-722a3641ed85?auto=format&fit=crop&w=400&q=80",
-    votes: 8500,
-    short_bio: "The 'Missile Man of India' and former President reflecting wisdom and simplicity.",
-    full_bio: "Avul Pakir Jainulabdeen Abdul Kalam was an Indian aerospace scientist and statesman who served as the 11th president of India. He spent four decades as a scientist and science administrator, mainly at the DRDO and ISRO. He was intimately involved in India's civilian space programme and military missile development efforts.",
-    born: "Rameswaram, India",
-    impact: "Inspiring millions of youth through science, education, and his vision for India 2020.",
-    current_status: "Legacy Artist",
-    state: "Tamil Nadu"
-  },
-  {
-    name: "Anand Kumar",
-    category: "Teacher",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    votes: 2100,
-    short_bio: "Mathematician known for his Super 30 program.",
-    full_bio: "Anand Kumar is a mathematician best known for his Super 30 program, which he started in Patna, Bihar. The program coaches economically backward sections of society for the IIT-JEE. By 2018, 422 out of 480 had made it to ITIs and Discovery Channel showcased his work in a documentary.",
-    born: "Patna, India",
-    impact: "Empowering underprivileged students to achieve world-class education.",
-    current_status: "Active Educator",
-    state: "Bihar"
-  },
-  {
-    name: "Sonam Wangchuk",
-    category: "Social Worker",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
-    votes: 3200,
-    short_bio: "Engineer and innovator known for SECMOL and Ice Stupas.",
-    full_bio: "Sonam Wangchuk is an Indian engineer, innovator and education reformist from Ladakh. He is the founding-director of the SECMOL. He is also known for designing the SECMOL campus that runs entirely on solar energy. He invented the 'Ice Stupa' technique to address water shortages in high-altitude deserts.",
-    born: "Ladakh, India",
-    impact: "Revolutionizing education and water conservation in the Himalayan region.",
-    current_status: "Innovator & Activist",
-    state: "Ladakh"
-  }
-];
+// Personalities are now fetched from Firestore.
 
 // --- Components ---
 
@@ -231,7 +159,29 @@ export default function App() {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if profile exists
+      const profileRef = doc(db, 'users_profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+      
+      if (!profileSnap.exists()) {
+        const names = (user.displayName || '').split(' ');
+        const profile: UserProfile = {
+          firstName: names[0] || 'User',
+          lastName: names.slice(1).join(' ') || '',
+          dob: '',
+          mobile: '',
+          email: user.email || '',
+          photoURL: user.photoURL || ''
+        };
+        await setDoc(profileRef, profile);
+        setUserProfile(profile);
+      } else {
+        setUserProfile(profileSnap.data() as UserProfile);
+      }
+      
       setShowAuthModal(false);
     } catch (error) {
       console.error("Login failed:", error);
@@ -582,15 +532,15 @@ export default function App() {
               
               {user ? (
                 <div 
-                  onClick={handleLogout}
+                  onClick={() => setShowProfileModal(true)}
                   className="flex items-center gap-3 cursor-pointer group"
                 >
                   <img 
-                    src={user.photoURL || ''} 
+                    src={userProfile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
                     alt={user.displayName || ''} 
-                    className="w-10 h-10 rounded-full border border-gold group-hover:scale-105 transition-transform"
+                    className="w-10 h-10 rounded-full border border-gold group-hover:scale-105 transition-transform object-cover"
                   />
-                  <div className="hidden sm:block">
+                  <div className="hidden sm:block text-left">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
                       {userStats?.badges?.[0] || 'Contributor'}
                     </p>
@@ -1106,121 +1056,172 @@ export default function App() {
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={() => setShowAuthModal(false)}
-              className="absolute inset-0 bg-navy/60 backdrop-blur-md" 
+              className="absolute inset-0 bg-navy/80 backdrop-blur-md" 
             />
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl overflow-hidden"
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative bg-[#fcfaf7] w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[500px]"
             >
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h3 className="text-3xl font-serif mb-1">{authMode === 'login' ? 'Welcome Back' : 'Join Legacy'}</h3>
-                  <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Bharat Icons Membership</p>
+              {/* Left Side - Visual/Prestige */}
+              <div className="hidden md:flex md:w-1/3 bg-navy p-8 flex-col justify-between text-white relative h-full">
+                <div className="z-10">
+                  <div className="w-10 h-10 bg-white flex items-center justify-center rounded-sm mb-6">
+                    <span className="text-navy font-serif text-2xl font-bold">B</span>
+                  </div>
+                  <h4 className="text-xl font-serif leading-tight mb-2">Preserving the <span className="text-gold italic">Legacy</span> of India.</h4>
                 </div>
-                <button 
-                  onClick={() => setShowAuthModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X size={20} className="text-gray-400" />
-                </button>
+                <div className="z-10 text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">
+                  Join the Community
+                </div>
+                {/* Decorative Pattern */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+                  <div className="absolute -bottom-10 -right-10 w-40 h-40 border-4 border-white rounded-full" />
+                  <div className="absolute top-20 -left-10 w-20 h-20 border border-gold rounded-full" />
+                </div>
               </div>
 
-              <div className="flex border-b border-gray-100 mb-8">
-                <button 
-                  onClick={() => setAuthMode('login')}
-                  className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest transition-all ${authMode === 'login' ? 'text-navy border-b-2 border-gold' : 'text-gray-300'}`}
-                >
-                  Sign In
-                </button>
-                <button 
-                  onClick={() => setAuthMode('signup')}
-                  className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest transition-all ${authMode === 'signup' ? 'text-navy border-b-2 border-gold' : 'text-gray-300'}`}
-                >
-                  Register
-                </button>
-              </div>
+              {/* Right Side - Form */}
+              <div className="flex-1 p-8 md:p-10">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="text-3xl font-serif text-navy mb-1">
+                      {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+                    </h3>
+                    <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">
+                      {authMode === 'login' ? 'Sign in to your profile' : 'Begin your journey'}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowAuthModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
 
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                {authMode === 'signup' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="First Name"
-                      value={authFormData.firstName}
-                      onChange={(e) => setAuthFormData({...authFormData, firstName: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm focus:outline-none focus:border-gold transition-all"
-                    />
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="Last Name"
-                      value={authFormData.lastName}
-                      onChange={(e) => setAuthFormData({...authFormData, lastName: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm focus:outline-none focus:border-gold transition-all"
-                    />
-                    <div className="col-span-2">
-                       <input 
-                        required
-                        type="date" 
-                        placeholder="Date of Birth"
-                        value={authFormData.dob}
-                        onChange={(e) => setAuthFormData({...authFormData, dob: e.target.value})}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm focus:outline-none focus:border-gold transition-all"
-                      />
-                    </div>
-                    <div className="col-span-2">
+                <div className="flex bg-gray-100/50 p-1 rounded-xl mb-8">
+                  <button 
+                    onClick={() => setAuthMode('login')}
+                    className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-all rounded-lg ${authMode === 'login' ? 'bg-white text-navy shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Login
+                  </button>
+                  <button 
+                    onClick={() => setAuthMode('signup')}
+                    className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-all rounded-lg ${authMode === 'signup' ? 'bg-white text-navy shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Register
+                  </button>
+                </div>
+
+                <form onSubmit={handleEmailAuth} className="space-y-4">
+                  {authMode === 'signup' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">First Name</label>
+                          <input 
+                            required
+                            type="text" 
+                            placeholder="e.g. Rahul"
+                            value={authFormData.firstName}
+                            onChange={(e) => setAuthFormData({...authFormData, firstName: e.target.value})}
+                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Last Name</label>
+                          <input 
+                            required
+                            type="text" 
+                            placeholder="e.g. Kumar"
+                            value={authFormData.lastName}
+                            onChange={(e) => setAuthFormData({...authFormData, lastName: e.target.value})}
+                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Birth Date</label>
+                          <input 
+                            required
+                            type="date" 
+                            value={authFormData.dob}
+                            onChange={(e) => setAuthFormData({...authFormData, dob: e.target.value})}
+                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Mobile</label>
+                          <input 
+                            required
+                            type="tel" 
+                            placeholder="+91..."
+                            value={authFormData.mobile}
+                            onChange={(e) => setAuthFormData({...authFormData, mobile: e.target.value})}
+                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
                       <input 
                         required
-                        type="tel" 
-                        placeholder="Mobile Number"
-                        value={authFormData.mobile}
-                        onChange={(e) => setAuthFormData({...authFormData, mobile: e.target.value})}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm focus:outline-none focus:border-gold transition-all"
+                        type="email" 
+                        placeholder="name@example.com"
+                        value={authFormData.email}
+                        onChange={(e) => setAuthFormData({...authFormData, email: e.target.value})}
+                        className="w-full bg-white border border-gray-100 rounded-xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
                       />
                     </div>
                   </div>
-                )}
-                <input 
-                  required
-                  type="email" 
-                  placeholder="Email Address"
-                  value={authFormData.email}
-                  onChange={(e) => setAuthFormData({...authFormData, email: e.target.value})}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm focus:outline-none focus:border-gold transition-all"
-                />
-                <input 
-                  required
-                  type="password" 
-                  placeholder="Password"
-                  value={authFormData.password}
-                  onChange={(e) => setAuthFormData({...authFormData, password: e.target.value})}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm focus:outline-none focus:border-gold transition-all"
-                />
-                
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Password</label>
+                    <input 
+                      required
+                      type="password" 
+                      placeholder="••••••••"
+                      value={authFormData.password}
+                      onChange={(e) => setAuthFormData({...authFormData, password: e.target.value})}
+                      className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                    />
+                  </div>
+                  
+                  <button 
+                    type="submit" 
+                    className="w-full py-4 bg-navy text-white rounded-xl font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-navy/20 hover:bg-navy/90 active:scale-[0.98] transition-all pt-5"
+                  >
+                    {authMode === 'login' ? 'Enter Dashboard' : 'Create Legacy Profile'}
+                  </button>
+                </form>
+
+                <div className="mt-8 flex items-center gap-4">
+                  <div className="h-px flex-1 bg-gray-100"></div>
+                  <span className="text-[9px] text-gray-300 font-bold uppercase tracking-widest">Social Entry</span>
+                  <div className="h-px flex-1 bg-gray-100"></div>
+                </div>
+
                 <button 
-                  type="submit" 
-                  className="w-full py-5 bg-navy text-white rounded-xl font-bold uppercase tracking-[0.2em] text-xs shadow-xl shadow-navy/20 active:scale-95 transition-all mt-4"
+                  onClick={handleGoogleLogin}
+                  className="w-full mt-6 py-3 border border-gray-100 rounded-xl flex items-center justify-center gap-3 text-xs font-bold text-navy hover:bg-white hover:shadow-md transition-all group px-4"
                 >
-                  {authMode === 'login' ? 'Access Account' : 'Create Profile'}
+                  <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4" />
+                  Continue with Google
                 </button>
-              </form>
 
-              <div className="mt-8 flex items-center gap-4">
-                <div className="h-px flex-1 bg-gray-100"></div>
-                <span className="text-[10px] text-gray-300 font-bold uppercase">Or continue with</span>
-                <div className="h-px flex-1 bg-gray-100"></div>
+                <p className="mt-6 text-center text-[10px] text-gray-400 font-medium">
+                  By continuing, you agree to our <span className="text-gold cursor-pointer hover:underline">Honor Code</span> & <span className="text-gold cursor-pointer hover:underline">Privacy</span>.
+                </p>
               </div>
-
-              <button 
-                onClick={handleGoogleLogin}
-                className="w-full mt-6 py-4 border border-gray-100 rounded-xl flex items-center justify-center gap-3 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
-              >
-                <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4" />
-                Google Account
-              </button>
             </motion.div>
           </div>
         )}
@@ -1229,7 +1230,7 @@ export default function App() {
       {/* User Profile Modal */}
       <AnimatePresence>
         {showProfileModal && user && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
@@ -1241,70 +1242,115 @@ export default function App() {
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+              className="relative bg-[#fdfaf6] w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-gold/20"
             >
-              <div className="bg-navy p-12 text-center relative">
+              {/* Header Banner */}
+              <div className="bg-navy p-10 pt-16 text-center relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-2 bg-gold/50" />
+                {/* Decorative Pattern */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none">
+                  <div className="absolute -top-10 -right-10 w-32 h-32 border-2 border-white rounded-full" />
+                  <div className="absolute top-10 -left-10 w-24 h-24 border border-gold rounded-full" />
+                </div>
+
                 <button 
                   onClick={() => setShowProfileModal(false)}
-                  className="absolute right-6 top-6 p-2 text-white/50 hover:text-white transition-colors"
+                  className="absolute right-6 top-6 p-2 text-white/50 hover:text-white transition-colors z-20"
                 >
                   <X size={20} />
                 </button>
+                
                 <div className="relative inline-block group mb-6">
+                  <div className="absolute inset-0 bg-gold rounded-full blur-xl opacity-20 animate-pulse" />
                   <img 
                     src={userProfile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
                     alt="" 
-                    className="w-24 h-24 rounded-full border-4 border-gold shadow-2xl object-cover"
+                    className="w-28 h-28 rounded-full border-4 border-gold shadow-2xl object-cover relative z-10"
                   />
-                  <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <Plus size={24} className="text-white" />
+                  <label className="absolute inset-x-0 -bottom-2 z-20 flex justify-center">
+                    <div className="bg-white text-navy p-2 rounded-full shadow-lg cursor-pointer hover:bg-gold hover:text-white transition-colors">
+                      <Plus size={16} />
+                    </div>
                     <input type="file" className="hidden" accept="image/*" onChange={handlePhotoSelect} />
                   </label>
                 </div>
-                <h3 className="text-2xl font-serif text-white mb-2">{user.displayName}</h3>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold/20 rounded-full border border-gold/30">
-                  <Award size={14} className="text-gold" />
-                  <span className="text-[10px] font-bold text-gold uppercase tracking-widest">{userStats?.badges?.[0] || 'Explorer'}</span>
+                
+                <h3 className="text-2xl font-serif text-white mb-2 relative z-10">{user.displayName}</h3>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold/10 rounded-full border border-gold/20 relative z-10">
+                  <Award size={12} className="text-gold" />
+                  <span className="text-[9px] font-bold text-gold uppercase tracking-[0.2em]">{userStats?.badges?.[0] || 'Community Guardian'}</span>
                 </div>
               </div>
 
-              <div className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 rounded-2xl">
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Votes</p>
-                    <p className="text-xl font-serif text-navy">{userStats?.votesCount || 0}</p>
+              <div className="p-8">
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm text-center group hover:border-gold/30 transition-colors">
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Impact Score</p>
+                    <p className="text-2xl font-serif text-navy group-hover:text-gold transition-colors">{userStats?.votesCount || 0}</p>
                   </div>
-                  <div className="p-4 bg-gray-50 rounded-2xl">
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1">Impact Level</p>
-                    <p className="text-xl font-serif text-navy">Member</p>
+                  <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm text-center group hover:border-gold/30 transition-colors">
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Rank Level</p>
+                    <p className="text-2xl font-serif text-navy">Member</p>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                   <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email</span>
+                <div className="space-y-5">
+                   <div className="flex items-center justify-between pb-3 border-b border-gray-100 group">
+                    <div className="flex items-center gap-3">
+                      <Mail size={14} className="text-gray-300 group-hover:text-gold transition-colors" />
+                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Verified Email</span>
+                    </div>
                     <span className="text-xs font-semibold text-navy">{user.email}</span>
                   </div>
                   {userProfile && (
                     <>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mobile</span>
-                        <span className="text-xs font-semibold text-navy">{userProfile.mobile || 'Not set'}</span>
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-100 group">
+                        <div className="flex items-center gap-3">
+                          <Activity size={14} className="text-gray-300 group-hover:text-gold transition-colors" />
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Identity Link</span>
+                        </div>
+                        <span className="text-xs font-semibold text-navy">{userProfile.mobile || '—'}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date of Birth</span>
-                        <span className="text-xs font-semibold text-navy">{userProfile.dob || 'Not set'}</span>
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-100 group">
+                        <div className="flex items-center gap-3">
+                          <Calendar size={14} className="text-gray-300 group-hover:text-gold transition-colors" />
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Date of Birth</span>
+                        </div>
+                        <span className="text-xs font-semibold text-navy">{userProfile.dob || '—'}</span>
                       </div>
                     </>
                   )}
                 </div>
 
-                <button 
-                  onClick={handleLogout}
-                  className="w-full py-4 border border-red-100 text-red-500 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-red-50 transition-all flex items-center justify-center gap-2"
-                >
-                  <LogOut size={14} /> Kill Session
-                </button>
+                <div className="mt-10 flex gap-3">
+                  <button 
+                    onClick={() => {
+                      alert("Profile sharing is coming soon!");
+                    }}
+                    className="flex-1 py-4 bg-white border border-gray-200 text-gray-600 rounded-2xl text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    Share Profile
+                  </button>
+                  <button 
+                    onClick={handleLogout}
+                    className="flex-1 py-4 border border-red-50/50 bg-red-50/20 text-red-500 rounded-2xl text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <LogOut size={14} /> End Session
+                  </button>
+                </div>
+
+                {user.email === 'asimbyans@gmail.com' && (
+                  <a 
+                    href="/admin.html"
+                    className="mt-4 w-full py-4 bg-navy text-white rounded-2xl text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-navy/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-navy/20"
+                  >
+                    <LayoutDashboard size={14} className="text-gold" /> Admin Dashboard
+                  </a>
+                )}
+                
+                <p className="mt-8 text-center text-[8px] text-gray-300 font-bold uppercase tracking-widest leading-relaxed">
+                  Trusted Member since 2024<br/>Bharat Icons Heritage Program
+                </p>
               </div>
             </motion.div>
           </div>
