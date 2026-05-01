@@ -10,7 +10,8 @@ import {
   Trash2,
   Database,
   User as UserIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, handleFirestoreError } from './lib/firebase';
@@ -269,7 +270,7 @@ export default function AdminApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fdfaf6]">
+      <div className="min-h-screen flex items-center justify-center bg-heritage-cream">
         <motion.div 
           animate={{ scale: [1, 1.1, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -279,8 +280,57 @@ export default function AdminApp() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-heritage-cream p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white w-full max-w-md p-12 rounded-[3rem] shadow-2xl text-center border border-gray-100"
+        >
+          <div className="w-20 h-20 bg-navy text-white flex items-center justify-center rounded-3xl mx-auto mb-8 shadow-xl shadow-navy/20">
+            <LogIn size={32} />
+          </div>
+          <h2 className="text-3xl font-serif text-navy mb-4">Portal Locked</h2>
+          <p className="text-gray-400 text-sm mb-10 leading-relaxed">This terminal is restricted to authorized heritage custodians. Please authenticate to continue.</p>
+          <button 
+            onClick={handleLogin}
+            className="w-full py-5 bg-navy text-white rounded-2xl font-bold uppercase tracking-[0.3em] text-[11px] shadow-2xl shadow-navy/30 hover:bg-navy/90 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            Authenticate via Google
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-heritage-cream p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white w-full max-w-md p-12 rounded-[3rem] shadow-2xl text-center border-t-4 border-gold"
+        >
+          <div className="w-20 h-20 bg-gold/10 text-gold flex items-center justify-center rounded-3xl mx-auto mb-8">
+            <Award size={32} />
+          </div>
+          <h2 className="text-3xl font-serif text-navy mb-4">Access Denied</h2>
+          <p className="text-gray-400 text-sm mb-4 leading-relaxed">Your account ({user.email}) does not have administrative clearance for the heritage catalog.</p>
+          <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-10">Security Protocol Alpha-9</p>
+          <button 
+            onClick={handleLogout}
+            className="w-full py-4 border border-gray-100 text-gray-400 hover:text-navy hover:bg-gray-50 rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] transition-all"
+          >
+            End Session
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#fdfaf6] text-[#1a1a1a] selection:bg-gold/30 font-sans">
+    <div className="min-h-screen bg-heritage-cream text-navy selection:bg-gold/30 font-sans">
       {/* Premium Sidebar Background Element */}
       <div className="fixed top-0 left-0 w-64 h-full bg-navy hidden lg:block overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -312,6 +362,15 @@ export default function AdminApp() {
             >
               <LayoutDashboard size={18} /> Database
             </button>
+
+            <div className="pt-4 border-t border-white/5">
+              <button
+                onClick={() => window.location.href = '/'}
+                className="w-full flex items-center gap-3 px-5 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <ChevronLeft size={16} /> Exit to Site
+              </button>
+            </div>
           </div>
 
           <div className="mt-auto pb-8">
