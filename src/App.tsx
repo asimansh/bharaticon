@@ -474,7 +474,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-off-white">
+      <div className="min-h-screen flex items-center justify-center bg-heritage-cream">
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -485,7 +485,7 @@ export default function App() {
   }
 
   return (
-    <div id="app-root" className="min-h-screen flex flex-col bg-off-white selection:bg-gold/30">
+    <div id="app-root" className="min-h-screen flex flex-col bg-heritage-cream selection:bg-gold/30">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
@@ -493,18 +493,24 @@ export default function App() {
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden p-2 text-charcoal hover:bg-gray-100 rounded-full transition-colors"
+                className="lg:hidden p-2 text-charcoal hover:bg-heritage-cream rounded-full transition-colors"
                 aria-label="Toggle Menu"
               >
                 <Menu size={24} />
               </button>
-                  <div className="flex items-center gap-4 cursor-pointer">
-                    <div className="w-10 h-10 bg-navy flex items-center justify-center rounded-sm shadow-sm">
-                      <span className="text-white font-serif text-2xl">B</span>
+                  <div 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="flex items-center gap-4 cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 bg-navy flex items-center justify-center rounded-sm shadow-xl shadow-navy/20 group-hover:scale-105 transition-transform">
+                      <span className="text-white font-serif text-3xl font-bold">B</span>
                     </div>
-                    <h1 className="text-2xl font-serif tracking-tight text-charcoal leading-none">
-                      Bharat <span className="text-gold">Icons</span>
-                    </h1>
+                    <div className="flex flex-col">
+                      <h1 className="text-2xl font-serif tracking-tight text-navy leading-none">
+                        Bharat <span className="text-gold">Icons</span>
+                      </h1>
+                      <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-400 mt-1">Heritage Program</p>
+                    </div>
                   </div>
                 </div>
 
@@ -521,42 +527,49 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  <div className="hidden lg:flex items-center gap-6 text-sm font-semibold uppercase tracking-widest">
-                    <span 
-                      className="text-navy font-bold"
+                <div className="flex items-center gap-10">
+                  <div className="hidden lg:flex items-center gap-10">
+                    <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Manifest</button>
+                    <button onClick={() => setSelectedCategory('All')} className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Icons</button>
+                    <button className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Legacy</button>
+                  </div>
+                  
+                  <div className="h-4 w-px bg-gray-100 hidden lg:block"></div>
+
+                  {user ? (
+                    <div 
+                      onClick={() => setShowProfileModal(true)}
+                      className="flex items-center gap-3 cursor-pointer group bg-heritage-cream/50 pl-2 pr-5 py-1.5 rounded-full hover:bg-heritage-cream transition-all border border-transparent hover:border-gold/10"
                     >
-                      Dashboard
-                    </span>
-                  </div>
-              
-              {user ? (
-                <div 
-                  onClick={() => setShowProfileModal(true)}
-                  className="flex items-center gap-3 cursor-pointer group"
-                >
-                  <img 
-                    src={userProfile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
-                    alt={user.displayName || ''} 
-                    className="w-10 h-10 rounded-full border border-gold group-hover:scale-105 transition-transform object-cover"
-                  />
-                  <div className="hidden sm:block text-left">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                      {userStats?.badges?.[0] || 'Contributor'}
-                    </p>
-                    <p className="text-xs font-bold text-navy truncate max-w-[100px] leading-tight">{user.displayName}</p>
-                  </div>
+                      <div className="relative">
+                        <img 
+                          src={userProfile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
+                          alt={user.displayName || ''} 
+                          className="w-10 h-10 rounded-full border border-gold shadow-lg shadow-gold/10 group-hover:scale-105 transition-transform object-cover"
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gold rounded-full border-2 border-white flex items-center justify-center text-[6px] text-white">
+                          <Award size={8} />
+                        </div>
+                      </div>
+                      <div className="hidden sm:block text-left">
+                        <p className="text-[9px] font-bold text-gold uppercase tracking-[0.2em] leading-none mb-1">
+                          {userStats?.badges?.[0] || 'Contributor'}
+                        </p>
+                        <p className="text-[11px] font-serif text-navy font-bold leading-tight line-clamp-1">{userProfile?.firstName || user.displayName?.split(' ')[0] || 'Member'}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setShowAuthModal(true)}
+                      className="group flex items-center gap-4 bg-navy text-white text-[10px] font-bold uppercase tracking-[0.3em] pl-6 pr-4 py-3 hover:bg-navy/90 transition-all rounded-sm shadow-xl shadow-navy/20"
+                    >
+                      <span>Join Portal</span>
+                      <div className="bg-gold/20 p-1.5 rounded-sm group-hover:bg-gold/30 transition-colors">
+                        <Plus size={12} className="text-gold" />
+                      </div>
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button 
-                  onClick={() => setShowAuthModal(true)}
-                  className="flex items-center gap-2 bg-navy text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 hover:bg-opacity-90 transition-all rounded-sm"
-                >
-                  <LogIn size={14} className="text-gold" />
-                  Sign In
-                </button>
-              )}
-            </div>
           </div>
         </div>
       </nav>
@@ -1083,142 +1096,121 @@ export default function App() {
               </div>
 
               {/* Right Side - Form */}
-              <div className="flex-1 p-8 md:p-10">
-                <div className="flex justify-between items-start mb-6">
+              <div className="flex-1 p-10 md:p-14 bg-white">
+                <div className="flex justify-between items-start mb-10">
                   <div>
-                    <h3 className="text-3xl font-serif text-navy mb-1">
-                      {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+                    <h3 className="text-3xl font-serif text-navy mb-2">
+                      {authMode === 'login' ? 'Authentication' : 'Registration'}
                     </h3>
-                    <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">
-                      {authMode === 'login' ? 'Sign in to your profile' : 'Begin your journey'}
-                    </p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold">Access the Legacy Portal</p>
                   </div>
                   <button 
                     onClick={() => setShowAuthModal(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+                    className="p-3 hover:bg-heritage-cream text-gray-300 hover:text-navy rounded-full transition-all"
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <div className="flex bg-gray-100/50 p-1 rounded-xl mb-8">
+                <div className="flex bg-heritage-cream p-1.5 rounded-2xl mb-10">
                   <button 
                     onClick={() => setAuthMode('login')}
-                    className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-all rounded-lg ${authMode === 'login' ? 'bg-white text-navy shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all rounded-xl ${authMode === 'login' ? 'bg-white text-navy shadow-xl shadow-black/5' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     Login
                   </button>
                   <button 
                     onClick={() => setAuthMode('signup')}
-                    className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-all rounded-lg ${authMode === 'signup' ? 'bg-white text-navy shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all rounded-xl ${authMode === 'signup' ? 'bg-white text-navy shadow-xl shadow-black/5' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     Register
                   </button>
                 </div>
 
-                <form onSubmit={handleEmailAuth} className="space-y-4">
+                <form onSubmit={handleEmailAuth} className="space-y-6">
                   {authMode === 'signup' && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
+                    <motion.div 
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-5"
+                    >
+                      <div className="grid grid-cols-2 gap-5">
+                        <div className="space-y-2">
                           <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">First Name</label>
                           <input 
                             required
                             type="text" 
-                            placeholder="e.g. Rahul"
+                            placeholder="Rahul"
                             value={authFormData.firstName}
                             onChange={(e) => setAuthFormData({...authFormData, firstName: e.target.value})}
-                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                            className="w-full bg-heritage-cream border-2 border-transparent rounded-2xl px-6 py-4 text-sm focus:outline-none focus:bg-white focus:border-gold/20 transition-all shadow-inner"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Last Name</label>
                           <input 
                             required
                             type="text" 
-                            placeholder="e.g. Kumar"
+                            placeholder="Kumar"
                             value={authFormData.lastName}
                             onChange={(e) => setAuthFormData({...authFormData, lastName: e.target.value})}
-                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                            className="w-full bg-heritage-cream border-2 border-transparent rounded-2xl px-6 py-4 text-sm focus:outline-none focus:bg-white focus:border-gold/20 transition-all shadow-inner"
                           />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Birth Date</label>
-                          <input 
-                            required
-                            type="date" 
-                            value={authFormData.dob}
-                            onChange={(e) => setAuthFormData({...authFormData, dob: e.target.value})}
-                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Mobile</label>
-                          <input 
-                            required
-                            type="tel" 
-                            placeholder="+91..."
-                            value={authFormData.mobile}
-                            onChange={(e) => setAuthFormData({...authFormData, mobile: e.target.value})}
-                            className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
-                          />
-                        </div>
-                      </div>
-                    </>
+                    </motion.div>
                   )}
                   
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Email Address</label>
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Email Coordinates</label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                      <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
                       <input 
                         required
                         type="email" 
-                        placeholder="name@example.com"
+                        placeholder="guardian@heritage.online"
                         value={authFormData.email}
                         onChange={(e) => setAuthFormData({...authFormData, email: e.target.value})}
-                        className="w-full bg-white border border-gray-100 rounded-xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                        className="w-full bg-heritage-cream border-2 border-transparent rounded-2xl pl-16 pr-6 py-4 text-sm focus:outline-none focus:bg-white focus:border-gold/20 transition-all shadow-inner"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Password</label>
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-bold text-gray-400 ml-1">Secure Key</label>
                     <input 
                       required
                       type="password" 
-                      placeholder="••••••••"
+                      placeholder="••••••••••••"
                       value={authFormData.password}
                       onChange={(e) => setAuthFormData({...authFormData, password: e.target.value})}
-                      className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-sm"
+                      className="w-full bg-heritage-cream border-2 border-transparent rounded-2xl px-6 py-4 text-sm focus:outline-none focus:bg-white focus:border-gold/20 transition-all shadow-inner"
                     />
                   </div>
                   
                   <button 
                     type="submit" 
-                    className="w-full py-4 bg-navy text-white rounded-xl font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-navy/20 hover:bg-navy/90 active:scale-[0.98] transition-all pt-5"
+                    className="w-full py-5 bg-navy text-white rounded-[2rem] font-bold uppercase tracking-[0.3em] text-[11px] shadow-2xl shadow-navy/30 hover:bg-navy/90 hover:scale-[1.01] active:scale-[0.98] transition-all"
                   >
-                    {authMode === 'login' ? 'Enter Dashboard' : 'Create Legacy Profile'}
+                    {authMode === 'login' ? 'Authorize Presence' : 'Commence Initialization'}
                   </button>
                 </form>
 
-                <div className="mt-8 flex items-center gap-4">
+                <div className="mt-12 mb-10 flex items-center gap-6">
                   <div className="h-px flex-1 bg-gray-100"></div>
-                  <span className="text-[9px] text-gray-300 font-bold uppercase tracking-widest">Social Entry</span>
+                  <span className="text-[8px] text-gray-300 font-bold uppercase tracking-[0.4em]">Integrated ID Provider</span>
                   <div className="h-px flex-1 bg-gray-100"></div>
                 </div>
 
                 <button 
-                  onClick={handleGoogleLogin}
-                  className="w-full mt-6 py-3 border border-gray-100 rounded-xl flex items-center justify-center gap-3 text-xs font-bold text-navy hover:bg-white hover:shadow-md transition-all group px-4"
+                   onClick={handleGoogleLogin}
+                   className="w-full py-4.5 border-2 border-heritage-cream rounded-2xl flex items-center justify-center gap-4 text-[11px] font-bold text-navy hover:bg-heritage-cream/50 transition-all group"
                 >
-                  <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4" />
-                  Continue with Google
+                  <img src="https://www.google.com/favicon.ico" alt="" className="w-5 h-5 group-hover:rotate-[360deg] transition-transform duration-700" />
+                  <span>Authenticate with Google Network</span>
                 </button>
-
-                <p className="mt-6 text-center text-[10px] text-gray-400 font-medium">
+                <p className="mt-8 text-center text-[10px] text-gray-400 font-medium">
                   By continuing, you agree to our <span className="text-gold cursor-pointer hover:underline">Honor Code</span> & <span className="text-gold cursor-pointer hover:underline">Privacy</span>.
                 </p>
               </div>
@@ -1242,7 +1234,7 @@ export default function App() {
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-[#fdfaf6] w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-gold/20"
+              className="relative bg-heritage-cream w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-gold/20"
             >
               {/* Header Banner */}
               <div className="bg-navy p-10 pt-16 text-center relative overflow-hidden">
