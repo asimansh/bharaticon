@@ -8,12 +8,13 @@
   --color-charcoal: #1A1A1A;
   --color-navy: #002147;
   --color-gold: #C5A021;
-  --color-off-white: #FDFDFD;
+  --color-off-white: #fdfbf7;
+  --color-heritage-cream: #f8f5f2;
 }
 
 @layer base {
   body {
-    @apply bg-off-white text-charcoal font-sans antialiased;
+    @apply bg-heritage-cream text-navy font-sans antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
