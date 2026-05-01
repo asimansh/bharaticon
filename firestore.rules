@@ -44,7 +44,7 @@ service cloud.firestore {
     match /users_stats/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && 
-        request.resource.data.votesCount == 1 &&
+        (request.resource.data.votesCount == 0 || request.resource.data.votesCount == 1) &&
         request.resource.data.badges.size() == 0;
       allow update: if isOwner(userId) &&
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votesCount', 'badges']));
