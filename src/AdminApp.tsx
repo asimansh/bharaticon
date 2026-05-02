@@ -203,12 +203,29 @@ export default function AdminApp() {
     }
   };
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const handleLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    console.log("Admin Portal: Initiating Google Login...");
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Login failed:", error);
+      const result = await signInWithPopup(auth, provider);
+      console.log("Admin Portal: Login successful", result.user.email);
+    } catch (error: any) {
+      console.error("Admin Portal: Login failed", error);
+      if (error.code === 'auth/popup-blocked') {
+        alert("The login popup was blocked by your browser. Please allow popups for this site and try again.");
+      } else if (error.code === 'auth/network-request-failed') {
+        alert("Network error. Please check your internet connection.");
+      } else {
+        alert("Login failed: " + (error.message || "Unknown error"));
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -295,9 +312,13 @@ export default function AdminApp() {
           <p className="text-gray-400 text-sm mb-10 leading-relaxed">This terminal is restricted to authorized heritage custodians. Please authenticate to continue.</p>
           <button 
             onClick={handleLogin}
-            className="w-full py-5 bg-navy text-white rounded-2xl font-bold uppercase tracking-[0.3em] text-[11px] shadow-2xl shadow-navy/30 hover:bg-navy/90 hover:scale-[1.02] active:scale-95 transition-all"
+            disabled={isLoggingIn}
+            className="w-full py-5 bg-navy text-white rounded-2xl font-bold uppercase tracking-[0.3em] text-[11px] shadow-2xl shadow-navy/30 hover:bg-navy/90 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Authenticate via Google
+            {isLoggingIn ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : null}
+            {isLoggingIn ? 'Connecting...' : 'Authenticate via Google'}
           </button>
         </motion.div>
       </div>
@@ -418,9 +439,11 @@ export default function AdminApp() {
             ) : (
               <button 
                 onClick={handleLogin}
-                className="bg-navy text-white px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-navy/90 hover:shadow-xl transition-all"
+                disabled={isLoggingIn}
+                className="bg-navy text-white px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-navy/90 hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
               >
-                Access Portal
+                {isLoggingIn && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {isLoggingIn ? 'Connecting' : 'Access Portal'}
               </button>
             )}
           </div>
@@ -446,9 +469,11 @@ export default function AdminApp() {
               {!user && (
                 <button 
                   onClick={handleLogin}
-                  className="bg-navy text-white px-12 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-navy/90 shadow-2xl shadow-navy/20 active:scale-95 transition-all"
+                  disabled={isLoggingIn}
+                  className="bg-navy text-white px-12 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-navy/90 shadow-2xl shadow-navy/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3 mx-auto"
                 >
-                  Initiate Secure Login
+                  {isLoggingIn && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  {isLoggingIn ? 'Connecting...' : 'Initiate Secure Login'}
                 </button>
               )}
             </motion.div>
