@@ -97,7 +97,7 @@ interface Personality {
 // --- Components ---
 
 const Badge = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
-  <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded ${className}`}>
+  <span className={`px-3 py-1.5 text-xs font-bold uppercase tracking-widest rounded ${className}`}>
     {children}
   </span>
 );
@@ -506,10 +506,10 @@ export default function App() {
                       <span className="text-white font-serif text-3xl font-bold">B</span>
                     </div>
                     <div className="flex flex-col">
-                      <h1 className="text-2xl font-serif tracking-tight text-navy leading-none">
+                      <h1 className="text-3xl font-serif tracking-tight text-navy leading-none">
                         Bharat <span className="text-gold">Icons</span>
                       </h1>
-                      <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-400 mt-1">Heritage Program</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 mt-2">Heritage Program</p>
                     </div>
                   </div>
                 </div>
@@ -528,44 +528,44 @@ export default function App() {
                 </div>
 
                 <div className="flex items-center gap-10">
-                  <div className="hidden lg:flex items-center gap-10">
-                    <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Manifest</button>
-                    <button onClick={() => setSelectedCategory('All')} className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Icons</button>
-                    <button className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Legacy</button>
+                  <div className="hidden lg:flex items-center gap-12">
+                    <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-xs font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Manifest</button>
+                    <button onClick={() => setSelectedCategory('All')} className="text-xs font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Icons</button>
+                    <button className="text-xs font-bold uppercase tracking-[0.2em] text-navy/60 hover:text-navy transition-colors">Legacy</button>
                   </div>
                   
-                  <div className="h-4 w-px bg-gray-100 hidden lg:block"></div>
+                  <div className="h-6 w-px bg-gray-100 hidden lg:block"></div>
 
                   {user ? (
                     <div 
                       onClick={() => setShowProfileModal(true)}
-                      className="flex items-center gap-3 cursor-pointer group bg-heritage-cream/50 pl-2 pr-5 py-1.5 rounded-full hover:bg-heritage-cream transition-all border border-transparent hover:border-gold/10"
+                      className="flex items-center gap-4 cursor-pointer group bg-heritage-cream/50 pl-3 pr-6 py-2 rounded-full hover:bg-heritage-cream transition-all border border-transparent hover:border-gold/10"
                     >
                       <div className="relative">
                         <img 
                           src={userProfile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
                           alt={user.displayName || ''} 
-                          className="w-10 h-10 rounded-full border border-gold shadow-lg shadow-gold/10 group-hover:scale-105 transition-transform object-cover"
+                          className="w-12 h-12 rounded-full border-2 border-gold shadow-lg shadow-gold/10 group-hover:scale-105 transition-transform object-cover"
                         />
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gold rounded-full border-2 border-white flex items-center justify-center text-[6px] text-white">
-                          <Award size={8} />
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gold rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white">
+                          <Award size={10} />
                         </div>
                       </div>
                       <div className="hidden sm:block text-left">
-                        <p className="text-[9px] font-bold text-gold uppercase tracking-[0.2em] leading-none mb-1">
+                        <p className="text-[10px] font-bold text-gold uppercase tracking-[0.2em] leading-none mb-1.5">
                           {userStats?.badges?.[0] || 'Contributor'}
                         </p>
-                        <p className="text-[11px] font-serif text-navy font-bold leading-tight line-clamp-1">{userProfile?.firstName || user.displayName?.split(' ')[0] || 'Member'}</p>
+                        <p className="text-sm font-serif text-navy font-bold leading-tight line-clamp-1">{userProfile?.firstName || user.displayName?.split(' ')[0] || 'Member'}</p>
                       </div>
                     </div>
                   ) : (
                     <button 
                       onClick={() => setShowAuthModal(true)}
-                      className="group flex items-center gap-4 bg-navy text-white text-[10px] font-bold uppercase tracking-[0.3em] pl-6 pr-4 py-3 hover:bg-navy/90 transition-all rounded-sm shadow-xl shadow-navy/20"
+                      className="group flex items-center gap-5 bg-navy text-white text-xs font-bold uppercase tracking-[0.3em] pl-8 pr-6 py-4 hover:bg-navy/90 transition-all rounded-sm shadow-xl shadow-navy/20"
                     >
                       <span>Join Portal</span>
-                      <div className="bg-gold/20 p-1.5 rounded-sm group-hover:bg-gold/30 transition-colors">
-                        <Plus size={12} className="text-gold" />
+                      <div className="bg-gold/20 p-2 rounded-sm group-hover:bg-gold/30 transition-colors">
+                        <Plus size={14} className="text-gold" />
                       </div>
                     </button>
                   )}
@@ -579,20 +579,20 @@ export default function App() {
         <aside className="hidden lg:flex w-72 border-r border-gray-100 p-8 flex-col gap-10 bg-white flex-shrink-0">
           <div className="space-y-8">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Categories</h3>
-                <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-6">Categories</h3>
+                <div className="space-y-3">
                   {categories.map(cat => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`w-full flex items-center justify-between p-2 rounded transition-all text-sm ${
+                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all text-base ${
                         selectedCategory === cat 
-                          ? 'bg-slate-50 text-navy font-semibold' 
+                          ? 'bg-slate-50 text-navy font-bold' 
                           : 'text-gray-600 hover:bg-slate-50'
                       }`}
                     >
                       <span>{cat === 'All' ? 'All Personalities' : `${cat}s`}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      <span className={`text-xs px-2 py-1 rounded-lg ${
                         selectedCategory === cat ? 'bg-navy text-white' : 'bg-gray-100 text-gray-400'
                       }`}>
                         {personalities.filter(p => cat === 'All' || p.category === cat).length}
@@ -603,23 +603,23 @@ export default function App() {
               </div>
 
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">State / Region</h3>
-                <div className="space-y-1 max-h-[300px] overflow-y-auto scrollbar-hide pr-1">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-6">State / Region</h3>
+                <div className="space-y-2 max-h-[350px] overflow-y-auto scrollbar-hide pr-1">
                   {states.map(state => (
                     <button
                       key={state}
                       onClick={() => setSelectedState(state)}
-                      className={`w-full flex items-center justify-between p-2 rounded transition-all text-sm ${
+                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all text-base ${
                         selectedState === state 
-                          ? 'bg-gold/10 text-navy font-semibold' 
+                          ? 'bg-gold/10 text-navy font-bold' 
                           : 'text-gray-600 hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                         <div className={`w-1.5 h-1.5 rounded-full ${selectedState === state ? 'bg-gold' : 'bg-gray-200'}`} />
+                      <div className="flex items-center gap-3">
+                         <div className={`w-2 h-2 rounded-full ${selectedState === state ? 'bg-gold' : 'bg-gray-200'}`} />
                          <span>{state}</span>
                       </div>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                      <span className={`text-[11px] px-2 py-1 rounded-lg ${
                         selectedState === state ? 'bg-gold text-white' : 'bg-gray-100 text-gray-400'
                       }`}>
                         {personalities.filter(p => state === 'All' || p.state === state).length}
@@ -716,19 +716,19 @@ export default function App() {
 
                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
                       <div className="text-center">
-                        <p className="text-[10px] uppercase font-bold text-gray-400">Votes</p>
-                        <p className="text-lg font-semibold text-navy">{person.votes.toLocaleString()}</p>
+                        <p className="text-xs uppercase font-bold text-gray-400">Votes</p>
+                        <p className="text-xl font-semibold text-navy">{person.votes.toLocaleString()}</p>
                       </div>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleVote(person.id);
                         }}
-                        className="text-[10px] uppercase font-bold tracking-widest px-4 py-2 transition-all active:scale-95 bg-navy text-white hover:bg-opacity-90"
+                        className="text-xs uppercase font-bold tracking-widest px-6 py-3 transition-all active:scale-95 bg-navy text-white hover:bg-opacity-90"
                         id={`vote-btn-${person.id}`}
                         title={user ? 'Click to vote' : 'Login to vote'}
                       >
-                        {user ? 'Upvote' : 'Login to Vote'}
+                        {user ? 'Upvote' : 'Sign In'}
                       </button>
                     </div>
                   </motion.div>
