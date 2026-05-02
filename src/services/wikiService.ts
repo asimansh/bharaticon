@@ -21,7 +21,8 @@ export const searchWikipedia = async (query: string): Promise<WikiResult[]> => {
 };
 
 export const getWikiDetails = async (pageid: number): Promise<WikiResult | null> => {
-  const url = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&pithumbsize=1000&pageids=${pageid}&format=json&origin=*`;
+  // Fetching intro, thumbnail, and categories to help identify locations
+  const url = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|categories&exintro&explaintext&pithumbsize=1000&pageids=${pageid}&format=json&origin=*`;
   const response = await fetch(url);
   const data = await response.json();
   
