@@ -11,7 +11,11 @@ import {
   Database,
   User as UserIcon,
   Search as SearchIcon,
-  ChevronLeft
+  ChevronLeft,
+  Zap,
+  Edit3,
+  Save,
+  LogOut as LogOutIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, handleFirestoreError } from './lib/firebase';
@@ -57,6 +61,8 @@ export default function AdminApp() {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   // Wikipedia Search State
   const [wikiSearchQuery, setWikiSearchQuery] = useState('');
@@ -260,13 +266,26 @@ export default function AdminApp() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      const newDocRef = doc(collection(db, 'personalities'));
-      await setDoc(newDocRef, {
-        ...formData,
-        createdAt: serverTimestamp(),
-        addedBy: user.uid
-      });
+      if (editingId) {
+        // Update existing
+        const docRef = doc(db, 'personalities', editingId);
+        await setDoc(docRef, {
+          ...formData,
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid
+        }, { merge: true });
+        setEditingId(null);
+      } else {
+        // Create new
+        const newDocRef = doc(collection(db, 'personalities'));
+        await setDoc(newDocRef, {
+          ...formData,
+          createdAt: serverTimestamp(),
+          addedBy: user.uid
+        });
+      }
       
       setSuccess(true);
       setFormData({
@@ -283,8 +302,11 @@ export default function AdminApp() {
       });
 
       setTimeout(() => setSuccess(false), 3000);
+      setActiveTab('list');
     } catch (error) {
-      handleFirestoreError(error, 'create', 'personalities');
+      handleFirestoreError(error, editingId ? 'update' : 'create', editingId ? `personalities/${editingId}` : 'personalities');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -367,12 +389,12 @@ export default function AdminApp() {
           <div className="w-20 h-20 bg-navy text-white flex items-center justify-center rounded-3xl mx-auto mb-8 shadow-xl shadow-navy/20">
             <LogIn size={32} />
           </div>
-          <h2 className="text-3xl font-serif text-navy mb-4">Portal Locked</h2>
-          <p className="text-gray-400 text-sm mb-10 leading-relaxed">This terminal is restricted to authorized heritage custodians. Please authenticate to continue.</p>
+          <h2 className="text-4xl font-serif text-navy mb-6">Portal Locked</h2>
+          <p className="text-gray-500 text-base mb-10 leading-relaxed">This terminal is restricted to authorized heritage custodians. Please authenticate to continue.</p>
           <button 
             onClick={handleLogin}
             disabled={isLoggingIn}
-            className="w-full py-5 bg-navy text-white rounded-2xl font-bold uppercase tracking-[0.3em] text-[11px] shadow-2xl shadow-navy/30 hover:bg-navy/90 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-6 bg-navy text-white rounded-2xl font-bold uppercase tracking-[0.3em] text-xs shadow-2xl shadow-navy/30 hover:bg-navy/90 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoggingIn ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -395,12 +417,12 @@ export default function AdminApp() {
           <div className="w-20 h-20 bg-gold/10 text-gold flex items-center justify-center rounded-3xl mx-auto mb-8">
             <Award size={32} />
           </div>
-          <h2 className="text-3xl font-serif text-navy mb-4">Access Denied</h2>
-          <p className="text-gray-400 text-sm mb-4 leading-relaxed">Your account ({user.email}) does not have administrative clearance for the heritage catalog.</p>
-          <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-10">Security Protocol Alpha-9</p>
+          <h2 className="text-4xl font-serif text-navy mb-6">Access Denied</h2>
+          <p className="text-gray-500 text-base mb-4 leading-relaxed">Your account ({user.email}) does not have administrative clearance for the heritage catalog.</p>
+          <p className="text-xs font-bold text-gray-300 uppercase tracking-widest mb-10">Security Protocol Alpha-9</p>
           <button 
             onClick={handleLogout}
-            className="w-full py-4 border border-gray-100 text-gray-400 hover:text-navy hover:bg-gray-50 rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] transition-all"
+            className="w-full py-5 border-2 border-gray-100 text-gray-500 hover:text-navy hover:bg-gray-50 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs transition-all"
           >
             End Session
           </button>
@@ -424,40 +446,40 @@ export default function AdminApp() {
               <span className="text-navy font-serif text-2xl font-bold">B</span>
             </div>
             <div>
-              <h1 className="text-white text-lg font-bold tracking-tight leading-none">ADMIN</h1>
-              <p className="text-[10px] text-gray-400 font-bold tracking-[0.2em] mt-1 uppercase">Control Center</p>
+              <h1 className="text-white text-xl font-bold tracking-tight leading-none">ADMIN</h1>
+              <p className="text-xs text-gray-400 font-bold tracking-[0.2em] mt-1 uppercase">Control Center</p>
             </div>
           </div>
 
           <div className="space-y-4 flex-1">
             <button 
               onClick={() => setActiveTab('create')}
-              className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'create' ? 'bg-gold text-white shadow-lg shadow-gold/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-sm font-bold uppercase tracking-widest transition-all ${activeTab === 'create' ? 'bg-gold text-white shadow-lg shadow-gold/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
-              <PlusCircle size={18} /> Add Icon
+              <PlusCircle size={20} /> Add Icon
             </button>
             <button 
               onClick={() => setActiveTab('list')}
-              className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'list' ? 'bg-gold text-white shadow-lg shadow-gold/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-sm font-bold uppercase tracking-widest transition-all ${activeTab === 'list' ? 'bg-gold text-white shadow-lg shadow-gold/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
-              <LayoutDashboard size={18} /> Database
+              <LayoutDashboard size={20} /> Database
             </button>
 
             <div className="pt-4 border-t border-white/5">
               <button
                 onClick={() => window.location.href = '/'}
-                className="w-full flex items-center gap-3 px-5 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                className="w-full flex items-center gap-3 px-5 py-4 rounded-xl text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white hover:bg-white/5 transition-all"
               >
-                <ChevronLeft size={16} /> Exit to Site
+                <ChevronLeft size={18} /> Exit to Site
               </button>
             </div>
           </div>
 
           <div className="mt-auto pb-8">
-            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.3em] mb-4">Security Protocol</p>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] text-gray-400 font-bold">Encrypted Node</span>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-[0.3em] mb-4">Security Protocol</p>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest leading-none">Encrypted Node</span>
             </div>
           </div>
         </div>
@@ -476,30 +498,30 @@ export default function AdminApp() {
           <div className="flex items-center gap-6">
             <a 
               href="/" 
-              className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gold transition-colors flex items-center gap-2"
+              className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gold transition-colors flex items-center gap-2"
             >
-              <ExternalLink size={14} /> Live View
+              <ExternalLink size={16} /> Live View
             </a>
             
             {user ? (
               <div className="flex items-center gap-4 pl-6 border-l border-gray-100">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-navy leading-none mb-1">{user.displayName}</p>
-                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Master Admin</p>
+                  <p className="text-sm font-bold text-navy leading-none mb-1">{user.displayName}</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Master Admin</p>
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="w-10 h-10 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                  className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
                   title="Force Logout"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={20} />
                 </button>
               </div>
             ) : (
               <button 
                 onClick={handleLogin}
                 disabled={isLoggingIn}
-                className="bg-navy text-white px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-navy/90 hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+                className="bg-navy text-white px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-navy/90 hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
               >
                 {isLoggingIn && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {isLoggingIn ? 'Connecting' : 'Access Portal'}
@@ -548,18 +570,18 @@ export default function AdminApp() {
                 >
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                       <div>
-                        <p className="text-[10px] font-bold text-gold uppercase tracking-[0.3em] mb-3">Module 01</p>
-                        <h3 className="text-4xl font-serif text-navy">Metadata Infusion</h3>
-                        <p className="text-gray-400 font-medium mt-2">Enter factual specifications for the iconic personality.</p>
+                        <p className="text-xs font-bold text-gold uppercase tracking-[0.3em] mb-3">Module 01</p>
+                        <h3 className="text-5xl font-serif text-navy">Metadata Infusion</h3>
+                        <p className="text-gray-500 text-base mt-2">Enter factual specifications for the iconic personality.</p>
                       </div>
 
                       {/* Wikipedia Wizard - Re-styled for better visibility */}
-                      <div className="w-full md:w-auto min-w-[320px] bg-gold/5 p-6 rounded-3xl border-2 border-gold/20 shadow-xl shadow-gold/5">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-8 h-8 bg-gold rounded-full flex items-center justify-center text-white">
-                            <ZapIcon size={16} />
+                      <div className="w-full md:w-auto min-w-[360px] bg-gold/5 p-8 rounded-3xl border-2 border-gold/20 shadow-xl shadow-gold/5">
+                        <div className="flex items-center gap-3 mb-5">
+                          <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-white">
+                            <Zap size={20} />
                           </div>
-                          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy">Wikipedia AI Importer</h4>
+                          <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-navy">Wikipedia AI Importer</h4>
                         </div>
                         <div className="flex gap-4">
                           <div className="relative flex-1">
@@ -574,7 +596,7 @@ export default function AdminApp() {
                                 }
                               }}
                               placeholder="Type name (e.g. Sardar Patel)..."
-                              className="w-full bg-white border-2 border-gold/10 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-gold transition-all shadow-inner"
+                              className="w-full bg-white border-2 border-gold/10 rounded-2xl px-6 py-4 text-base focus:outline-none focus:border-gold transition-all shadow-inner"
                             />
                             <AnimatePresence>
                               {showWikiResults && wikiResults.length > 0 && (
@@ -582,11 +604,11 @@ export default function AdminApp() {
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: 10 }}
-                                  className="absolute left-0 right-0 top-full mt-3 bg-white border-2 border-gold/20 rounded-2xl shadow-2xl z-[150] max-h-72 overflow-y-auto p-4 space-y-2"
+                                  className="absolute left-0 right-0 top-full mt-3 bg-white border-2 border-gold/20 rounded-2xl shadow-2xl z-[150] max-h-80 overflow-y-auto p-4 space-y-2"
                                 >
-                                  <div className="flex justify-between items-center px-2 mb-2 border-b border-gray-100 pb-2">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Wikipedia Suggestions</span>
-                                    <button onClick={() => setShowWikiResults(false)} className="text-[10px] font-bold text-gold hover:text-navy transition-colors">Dismiss</button>
+                                  <div className="flex justify-between items-center px-2 mb-3 border-b border-gray-100 pb-3">
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Wikipedia Suggestions</span>
+                                    <button onClick={() => setShowWikiResults(false)} className="text-xs font-bold text-gold hover:text-navy transition-colors">Dismiss</button>
                                   </div>
                                   {wikiResults.map(result => (
                                     <button
@@ -595,11 +617,11 @@ export default function AdminApp() {
                                       onClick={() => handleWikiImport(result.pageid)}
                                       className="w-full text-left p-4 rounded-xl hover:bg-gold/5 flex flex-col gap-1 transition-all group border border-transparent hover:border-gold/20"
                                     >
-                                      <span className="text-sm font-bold text-navy group-hover:text-gold flex items-center gap-2">
-                                        <ZapIcon size={12} className="text-gold" />
+                                      <span className="text-base font-bold text-navy group-hover:text-gold flex items-center gap-2">
+                                        <Zap size={14} className="text-gold" />
                                         {result.title}
                                       </span>
-                                      <span className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: result.extract }} />
+                                      <span className="text-xs text-gray-500 line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: result.extract }} />
                                     </button>
                                   ))}
                                 </motion.div>
@@ -613,9 +635,9 @@ export default function AdminApp() {
                                handleWikiSearch();
                             }}
                             disabled={isWikiSearching}
-                            className="bg-gold text-white px-6 rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-gold/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="bg-gold text-white px-8 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-gold/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                           >
-                            {isWikiSearching ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Auto-Fill'}
+                            {isWikiSearching ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Auto-Fill'}
                           </button>
                         </div>
                       </div>
@@ -631,37 +653,37 @@ export default function AdminApp() {
                           exit={{ y: -100 }}
                           className="absolute inset-x-0 top-0 bg-gold text-white p-5 flex items-center justify-center gap-4 z-50 shadow-xl"
                         >
-                          <CheckCircle2 size={24} />
-                          <span className="font-bold uppercase tracking-[0.2em] text-xs">Identity Profile Synchronized</span>
+                          <CheckCircle2 size={32} />
+                          <span className="font-bold uppercase tracking-[0.2em] text-sm">Identity Profile Synchronized</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
                     {/* Section 1: Identity */}
                     <div className="space-y-8">
-                      <div className="flex items-center gap-4 border-b border-gray-50 pb-4">
-                        <span className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center text-[10px] font-bold">01</span>
-                        <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Core Identity</h4>
+                      <div className="flex items-center gap-4 border-b border-gray-50 pb-6">
+                        <span className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-xs font-bold">01</span>
+                        <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-400">Core Identity</h4>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Full Legal Name</label>
+                        <div className="space-y-4">
+                          <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Full Legal Name</label>
                           <input 
                             required
                             type="text" 
                             value={formData.name}
                             onChange={(e) => setFormData({...formData, name: e.target.value})}
                             placeholder="e.g. Dr. B.R. Ambedkar"
-                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-inner"
+                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-inner"
                           />
                         </div>
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Primary Discipline</label>
+                        <div className="space-y-4">
+                          <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Primary Discipline</label>
                           <select 
                             value={formData.category}
                             onChange={(e) => setFormData({...formData, category: e.target.value as any})}
-                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold transition-all cursor-pointer shadow-inner appearance-none"
+                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold transition-all cursor-pointer shadow-inner appearance-none"
                           >
                             <option value="Teacher">Teacher / Academic</option>
                             <option value="Leader">Political / Spiritual Leader</option>
@@ -673,14 +695,14 @@ export default function AdminApp() {
 
                     {/* Section 2: Visual & Location */}
                     <div className="space-y-8">
-                      <div className="flex items-center gap-4 border-b border-gray-50 pb-4">
-                        <span className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center text-[10px] font-bold">02</span>
-                        <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Visuals & Heritage</h4>
+                      <div className="flex items-center gap-4 border-b border-gray-50 pb-6">
+                        <span className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-xs font-bold">02</span>
+                        <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-400">Visuals & Heritage</h4>
                       </div>
 
                       <div className="space-y-10">
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Official Portrait (URL or Upload)</label>
+                        <div className="space-y-4">
+                          <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Official Portrait (URL or Upload)</label>
                           <div className="flex gap-4">
                             <input 
                               required
@@ -688,7 +710,7 @@ export default function AdminApp() {
                               value={formData.image.startsWith('data:') ? 'Image uploaded' : formData.image}
                               onChange={(e) => setFormData({...formData, image: e.target.value})}
                               placeholder="https://cloud-storage.com/portrait.png"
-                              className="flex-1 bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-inner"
+                              className="flex-1 bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-inner"
                               disabled={formData.image.startsWith('data:')}
                             />
                             <div className="relative">
@@ -701,10 +723,10 @@ export default function AdminApp() {
                               />
                               <label 
                                 htmlFor="admin-image-upload"
-                                className="h-full px-6 bg-white border border-gray-100 rounded-2xl flex items-center justify-center cursor-pointer hover:border-gold transition-colors text-[10px] font-bold uppercase tracking-widest text-gray-400 group"
+                                className="h-full px-8 bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center cursor-pointer hover:border-gold transition-colors text-xs font-bold uppercase tracking-widest text-gray-500 group"
                               >
                                 {isUploading ? (
-                                  <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                                  <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                   <span className="group-hover:text-gold transition-colors">Upload</span>
                                 )}
@@ -714,40 +736,40 @@ export default function AdminApp() {
                               <button 
                                 type="button"
                                 onClick={() => setFormData({...formData, image: ''})}
-                                className="px-4 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                                className="px-4 text-red-500 text-xs font-bold uppercase tracking-widest hover:underline"
                               >
                                 Clear
                               </button>
                             )}
                           </div>
                           {formData.image.startsWith('data:') && (
-                            <div className="mt-2 w-20 h-20 rounded-xl overflow-hidden border border-gold/20 shadow-lg">
+                            <div className="mt-4 w-32 h-32 rounded-xl overflow-hidden border-2 border-gold/20 shadow-2xl">
                               <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                             </div>
                           )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Ancestral Origin (Born)</label>
+                          <div className="space-y-4">
+                            <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Ancestral Origin (Born)</label>
                             <input 
                               required
                               type="text" 
                               value={formData.born}
                               onChange={(e) => setFormData({...formData, born: e.target.value})}
                               placeholder="City, Province"
-                              className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold transition-all shadow-inner"
+                              className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold transition-all shadow-inner"
                             />
                           </div>
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">State Designation</label>
+                          <div className="space-y-4">
+                            <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">State Designation</label>
                             <input 
                               required
                               type="text" 
                               value={formData.state}
                               onChange={(e) => setFormData({...formData, state: e.target.value})}
                               placeholder="e.g. Maharashtra"
-                              className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold transition-all shadow-inner"
+                              className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold transition-all shadow-inner"
                             />
                           </div>
                         </div>
@@ -756,26 +778,26 @@ export default function AdminApp() {
 
                     {/* Section 3: Biography */}
                     <div className="space-y-8">
-                      <div className="flex items-center gap-4 border-b border-gray-50 pb-4">
-                        <span className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center text-[10px] font-bold">03</span>
-                        <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Legacy Documents</h4>
+                      <div className="flex items-center gap-4 border-b border-gray-50 pb-6">
+                        <span className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-xs font-bold">03</span>
+                        <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-400">Legacy Documents</h4>
                       </div>
 
                       <div className="space-y-10">
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Current Status / Title</label>
+                        <div className="space-y-4">
+                          <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Current Status / Title</label>
                           <input 
                             required
                             type="text" 
                             value={formData.current_status}
                             onChange={(e) => setFormData({...formData, current_status: e.target.value})}
                             placeholder="e.g. Former President of India"
-                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold transition-all shadow-inner"
+                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold transition-all shadow-inner"
                           />
                         </div>
 
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Executive Summary (Max 100 char)</label>
+                        <div className="space-y-4">
+                          <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Executive Summary (Max 100 char)</label>
                           <input 
                             required
                             maxLength={100}
@@ -783,19 +805,19 @@ export default function AdminApp() {
                             value={formData.short_bio}
                             onChange={(e) => setFormData({...formData, short_bio: e.target.value})}
                             placeholder="The architect of modern India's constitution..."
-                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-gold transition-all shadow-inner"
+                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-5 text-base focus:outline-none focus:border-gold transition-all shadow-inner"
                           />
                         </div>
 
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Full Historical Account</label>
+                        <div className="space-y-4">
+                          <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Full Historical Account</label>
                           <textarea 
                             required
                             rows={8}
                             value={formData.full_bio}
                             onChange={(e) => setFormData({...formData, full_bio: e.target.value})}
                             placeholder="Enter detailed facts, education, and contributions..."
-                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-8 text-sm focus:outline-none focus:border-gold transition-all resize-none shadow-inner leading-relaxed"
+                            className="w-full bg-[#fdfaf6] border border-gray-100 rounded-2xl px-6 py-8 text-base focus:outline-none focus:border-gold transition-all resize-none shadow-inner leading-relaxed"
                           />
                         </div>
 
@@ -863,15 +885,15 @@ export default function AdminApp() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-1">
-                              <h4 className="text-lg font-serif text-navy">{person.name}</h4>
-                              <span className="px-2 py-0.5 bg-gold/10 text-gold text-[8px] font-bold uppercase tracking-widest rounded-full">{person.category}</span>
+                              <h4 className="text-xl font-serif text-navy">{person.name}</h4>
+                              <span className="px-3 py-1 bg-gold/10 text-gold text-xs font-bold uppercase tracking-widest rounded-full">{person.category}</span>
                             </div>
-                            <p className="text-xs text-gray-400 font-medium line-clamp-1">{person.short_bio}</p>
+                            <p className="text-sm text-gray-500 font-medium line-clamp-1">{person.short_bio}</p>
                           </div>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-6">
                             <div className="text-right mr-4">
-                              <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Votes</p>
-                              <p className="text-lg font-serif text-navy">{person.votes}</p>
+                              <p className="text-xs font-bold text-gray-300 uppercase tracking-widest leading-none mb-1">Votes</p>
+                              <p className="text-2xl font-serif text-navy">{person.votes}</p>
                             </div>
                             <button 
                               onClick={() => {
@@ -908,14 +930,14 @@ export default function AdminApp() {
         </main>
 
         {/* System Footer */}
-        <footer className="h-24 px-8 border-t border-gray-100 bg-white flex items-center justify-between text-gray-400 font-bold uppercase tracking-[0.2em] text-[8px]">
+        <footer className="h-28 px-12 border-t border-gray-100 bg-white flex flex-col md:flex-row items-center justify-between text-gray-400 font-bold uppercase tracking-[0.2em] text-xs gap-4 py-6 md:py-0">
           <div>© BHARAT ICONS HERITAGE PROGRAM 2024-2026</div>
-          <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2">
-              <CheckCircle2 size={10} className="text-green-500" />
+          <div className="flex items-center gap-10">
+            <span className="flex items-center gap-3">
+              <CheckCircle2 size={16} className="text-green-500" />
               DATABASE CONNECTED
             </span>
-            <span>SECURE TERMINAL : {user?.uid.slice(0, 8)}</span>
+            <span className="hidden sm:inline">SECURE TERMINAL : {user?.uid.slice(0, 8)}</span>
           </div>
         </footer>
       </div>
