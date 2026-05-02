@@ -210,15 +210,23 @@ export default function AdminApp() {
     setIsLoggingIn(true);
     console.log("Admin Portal: Initiating Google Login...");
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
     
     try {
+      // In some iframe environments, popups close immediately if they try to 
+      // cookie-redirect too many times. Removing custom parameters for stability.
       const result = await signInWithPopup(auth, provider);
       console.log("Admin Portal: Login successful", result.user.email);
     } catch (error: any) {
-      console.error("Admin Portal: Login failed", error);
+      console.error("Admin Portal: Login error details:", error.code, error.message);
+      
       if (error.code === 'auth/popup-blocked') {
-        alert("The login popup was blocked by your browser. Please allow popups for this site and try again.");
+        alert("The login popup was blocked. Please allow popups or try opening the app in a NEW TAB.");
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        console.warn("User closed the popup, or it closed automatically.");
+        // If it closes automatically, it's often the iframe sandbox
+        if (window.self !== window.top) {
+           alert("The login popup closed too quickly. This usually happens inside the preview window. Please open the app in a NEW TAB using the icon in the top-right corner to login.");
+        }
       } else if (error.code === 'auth/network-request-failed') {
         alert("Network error. Please check your internet connection.");
       } else {
