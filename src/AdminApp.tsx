@@ -343,17 +343,43 @@ export default function AdminApp() {
     try {
       const details = await getWikiDetails(pageid);
       if (details) {
-        // Clear previous and fill new
+        // Intelligence: Try to extract "Born" and "State" from the first few sentences
+        let detectedBorn = '';
+        let detectedState = '';
+        
+        // Common pattern: "born in City, State"
+        const birthRegex = /born (?:on [^,]+ )?in ([^,.]+)(?:, ([^,.]+))?/i;
+        const match = details.extract.match(birthRegex);
+        
+        if (match) {
+          detectedBorn = match[1].trim();
+          detectedState = match[2]?.trim() || '';
+        }
+
+        // List of Indian states to help with detection
+        const indianStates = [
+          'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
+          'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 
+          'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
+          'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+        ];
+
+        // If state is empty, try to find a known state name in the text
+        if (!detectedState) {
+          const foundState = indianStates.find(s => details.extract.includes(s));
+          if (foundState) detectedState = foundState;
+        }
+
         setFormData({
           name: details.title,
-          category: 'Teacher', // Default, user can change
+          category: 'Teacher',
           image: details.thumbnail || '',
           short_bio: details.extract.slice(0, 100).trim() + (details.extract.length > 100 ? '...' : ''),
           full_bio: details.extract,
-          born: '',
+          born: detectedBorn || '',
           impact: '',
-          current_status: '',
-          state: '',
+          current_status: details.extract.split('.')[0], // Suggest first sentence as status
+          state: detectedState || '',
           votes: 0
         });
         setShowWikiResults(false);
